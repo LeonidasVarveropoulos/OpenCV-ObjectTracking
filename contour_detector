@@ -1,0 +1,80 @@
+import cv2
+import numpy as np
+import math
+from shape_detection import DetectShape
+cv2 = cv2.cv2
+
+def contour_detect(frame,mask):
+
+    similar_area = {}
+    similar = {}
+     
+
+    black_template = np.zeros((480, 640, 3), dtype = "uint8")
+    black_corner = np.zeros((480, 640, 3), dtype = "uint8")
+
+    contours,_ = cv2.findContours(mask, cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
+
+    for contour in contours:
+        area = cv2.contourArea(contour)
+        similar_area[area] = contour
+
+    
+    for contour in contours:
+        area = cv2.contourArea(contour)
+
+        perimeter = cv2.arcLength(contour,True)
+        
+        if area > 200:
+
+            for key in similar_area.keys():
+
+                if area < key or area > key and area > key -100 and area < key + 100:                
+                    print(area)
+                    print(key)
+                    print("space")
+                    if len(similar) >= 2:
+                        similar = {}
+                        similar[key] = similar_area[key]
+                        similar[area] = contour
+                    else:
+                        similar[key] = similar_area[key]
+                        similar[area] = contour
+
+            
+            peri = perimeter
+            approx = cv2.approxPolyDP(contour,0.04 * peri, True)
+            # Gets one point out of 4 
+            #print(approx[0])
+            #print("space")
+
+            #print(area)
+            cv2.drawContours(black_corner,approx,-1,(0,255,0),3)
+            cv2.drawContours(frame,contour,-1,(0,255,0),3)
+            cv2.drawContours(black_template,contour,-1,(255,255,255),3)
+
+            x,y,w,h = cv2.boundingRect(contour)
+            rect = cv2.rectangle(frame,(x,y),(x+w,y+h),(255,0,0),2)
+
+            rows,cols = frame.shape[:2]
+            vx,vy,x,y = cv2.fitLine(contour, cv2.DIST_L2,0,0.01,0.01)
+            lefty = int((-x*vy/vx) + y)
+            righty = int(((cols-x)*vy/vx)+y)
+
+
+            slope = (righty - lefty)/ ((cols-1)-0)
+            #print(slope)
+
+
+            if righty >= -5000 and righty <= 5000 and lefty >= -5000 and lefty <= 5000:
+                cv2.line(frame,(cols-1,righty),(0,lefty),(0,255,255),2)
+    
+
+
+    cv2.imshow("Test",frame)
+    cv2.imshow("corner detect",black_corner)
+    cv2.imshow("template detect",black_template)
+
+    #return black_template
+        
+

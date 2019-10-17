@@ -1,0 +1,30 @@
+contour_area = []
+    contour_list = []
+    count = 0
+
+    for contour in contours:
+        area = cv2.contourArea(contour)
+
+        if count < 2:
+            contour_area.append(area)
+            contour_list.append(contour)
+    
+        count +=1
+        if count >= 2:
+            if area > contour_area[0]:
+                contour_area.pop(0)
+                contour_area.insert(0,area)
+                contour_list.pop(0)
+                contour_list.insert(0,contour)
+
+            elif area > contour_area[1]:
+                contour_area.pop(1)
+                contour_area.insert(1,area)
+                contour_list.pop(1)
+                contour_list.insert(1,contour)
+        
+
+        print(contour_area)
+    
+    for contour in contour_list:
+        cv2.drawContours(frame,contour,-1,(0,255,0),3)
